@@ -127,6 +127,6 @@ com.translate = {
 		return true;
 	},
 
-	debug: true
+	debug: false
 
 };
