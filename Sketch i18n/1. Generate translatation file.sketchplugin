@@ -1,0 +1,3 @@
+#import 'library/translate.js'
+
+com.translate.copyStringToClipboard(com.translate.generateLocaleForCurrentPage());
