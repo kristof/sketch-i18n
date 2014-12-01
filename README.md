@@ -9,7 +9,7 @@ Sketch i18n enables you to generate translation files for a page and translate i
 ## Usage
 ### Create a translation file
 1. Select a page in your Sketch file.
-2. Run `1. Generate translatation file` from the plugins menu.
+2. Run `1. Generate translation file` from the plugins menu.
 3. The contents of your translation file is now in your clipboard.
 4. Paste the contents of your clipboard in your favorite editor.
 6. Save the file as a JSON file for example: `en-US.json`.
