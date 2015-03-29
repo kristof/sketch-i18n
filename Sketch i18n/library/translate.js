@@ -11,7 +11,6 @@ com.translate = {
 		var app = [NSApplication sharedApplication];
 		[app displayDialog:msg withTitle:title];
 	},
-
 	getTextLayersForPage: function(page) {
 		var layers = [page children],
 				textLayers = [];
@@ -65,16 +64,16 @@ com.translate = {
 		this.alert('The translation file has been copied to your clipboard, paste it in your favorite editor and save it as a *.json file for example \'en-US.json\'.\n\nWhen you are ready to import your changes run \'2. Translate page\' and pick your json file that contains the translations.', null);
 		return true;
 	},
-	
-	translatePageWithData: function(page, language, data) {		
+
+	translatePageWithData: function(page, language, data) {
 		var pageName = [page name],
 				page = [page copy]
 				page.setName(pageName + ': ' + language),
 				textLayers = this.getTextLayersForPage(page),
 				errorCount = 0;
-				
+
 		[[doc documentData] addPage:page];
-		
+
 		for (var i = 0; i < textLayers.length; i++) {
 			var textLayer = textLayers[i],
 					stringValue = unescape(textLayer.stringValue());
@@ -85,45 +84,60 @@ com.translate = {
 				errorCount++;
 			}
 		}
-		
+
 		[doc setCurrentPage:page];
-		
+
+		// add suffix to artboard names
+		var artboards = page.artboards();
+
+		var loop = [artboards objectEnumerator]
+		while (artboard = loop.nextObject()) {
+			artboard.setName(artboard.name() + "_" + language);
+		}
+
 		return errorCount;
 	},
-	
+
 	translatePageWithFilePicker: function(page) {
 		var openPanel = [NSOpenPanel openPanel];
-		
+
 		var defaultDirectory = [NSURL fileURLWithPath:"~/Documents/"];
 		if([doc fileURL]) {
 			defaultDirectory = [[doc fileURL] URLByDeletingLastPathComponent]]
 		}
-		
+
 		[openPanel setCanChooseDirectories:true];
 		[openPanel setCanChooseFiles:true];
 		[openPanel setAllowedFileTypes:['json']];
 		[openPanel setCanCreateDirectories:false];
 		[openPanel setDirectoryURL:defaultDirectory];
-		
+        [openPanel setAllowsMultipleSelection: true]
+
 		[openPanel setTitle:"Pick a translation file"];
 		[openPanel setPrompt:"Translate"];
-		
+
 		if ([openPanel runModal] == NSOKButton) {
-			var url = [openPanel URL],
-					filename = [[url lastPathComponent] stringByDeletingPathExtension],
-					getString = NSString.stringWithContentsOfFile_encoding_error(url, NSUTF8StringEncoding, null);
-			
-			if(getString){
-				data = JSON.parse(getString.toString());
-				var errorCount = this.translatePageWithData(page, filename, data);
-				if (errorCount > 0){
-					this.alert('Translation completed with ' + errorCount + ' errors.', null);
-				}else{
-					this.alert('Translation completed successfully', null);
-				}
-			}
+			var urls = [openPanel URLs];
+            var errorCount = 0;
+
+            var url, filename, getString;
+            for (var i = 0; i < urls.count(); i++) {
+                url = urls[i];
+                filename = [[url lastPathComponent] stringByDeletingPathExtension];
+                getString = NSString.stringWithContentsOfFile_encoding_error(url, NSUTF8StringEncoding, null);
+
+                if(getString){
+                    data = JSON.parse(getString.toString());
+                    errorCount += this.translatePageWithData(page, filename, data);
+                }
+            }
+            if (errorCount > 0){
+                this.alert('Translation completed with ' + errorCount + ' errors.', null);
+            }else{
+                this.alert('Translation completed successfully', null);
+            }
 		}
-		
+
 		return true;
 	},
 
