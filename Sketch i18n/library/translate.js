@@ -2,122 +2,122 @@ var com = {};
 
 com.translate = {
 
-	debugLog: function(msg) {
-		if(this.debug) log(msg);
-	},
+    debugLog: function(msg) {
+        if(this.debug) log(msg);
+    },
 
-	alert: function (msg, title) {
-		title = title || 'Sketch translate';
-		var app = [NSApplication sharedApplication];
-		[app displayDialog:msg withTitle:title];
-	},
-	getTextLayersForPage: function(page) {
-		var layers = [page children],
-				textLayers = [];
+    alert: function (msg, title) {
+        title = title || 'Sketch translate';
+        var app = [NSApplication sharedApplication];
+        [app displayDialog:msg withTitle:title];
+    },
+    getTextLayersForPage: function(page) {
+        var layers = [page children],
+                textLayers = [];
 
-		for (var i = 0; i < layers.count(); i++) {
-			var layer = [layers objectAtIndex:i];
-			if (this.isTextLayer(layer)) {
-				textLayers.push(layer);
-			}
-		}
+        for (var i = 0; i < layers.count(); i++) {
+            var layer = [layers objectAtIndex:i];
+            if (this.isTextLayer(layer)) {
+                textLayers.push(layer);
+            }
+        }
 
-		return textLayers;
-	},
+        return textLayers;
+    },
 
-	isTextLayer: function(layer) {
-		if (layer.class() === MSTextLayer) {
-			return true;
-		}
-		return false;
-	},
+    isTextLayer: function(layer) {
+        if (layer.class() === MSTextLayer) {
+            return true;
+        }
+        return false;
+    },
 
-	localeStringFromTextLayers: function(textLayers) {
-		var localeObject = {};
+    localeStringFromTextLayers: function(textLayers) {
+        var localeObject = {};
 
-		for (var i = 0; i < textLayers.length; i++) {
-			var textLayer = textLayers[i],
-					stringValue = unescape(textLayer.stringValue());
+        for (var i = 0; i < textLayers.length; i++) {
+            var textLayer = textLayers[i],
+                    stringValue = unescape(textLayer.stringValue());
 
-			localeObject[stringValue] = stringValue;
-		}
+            localeObject[stringValue] = stringValue;
+        }
 
-		var localeJsonString = JSON.stringify(localeObject, undefined, 2);
+        var localeJsonString = JSON.stringify(localeObject, undefined, 2);
 
-		return localeJsonString;
-	},
+        return localeJsonString;
+    },
 
-	generateLocaleForPage: function(page) {
-		var textLayers = this.getTextLayersForPage(page);
-		return this.localeStringFromTextLayers(textLayers);
-	},
+    generateLocaleForPage: function(page) {
+        var textLayers = this.getTextLayersForPage(page);
+        return this.localeStringFromTextLayers(textLayers);
+    },
 
-	generateLocaleForCurrentPage: function() {
-		var currentPage = [doc currentPage];
-		return this.generateLocaleForPage(currentPage);
-	},
+    generateLocaleForCurrentPage: function() {
+        var currentPage = [doc currentPage];
+        return this.generateLocaleForPage(currentPage);
+    },
 
-	copyStringToClipboard: function(string) {
-		var clipboard = NSPasteboard.generalPasteboard();
-		clipboard.declareTypes_owner([NSPasteboardTypeString], null);
-		clipboard.setString_forType(string , NSPasteboardTypeString);
-		this.alert('The translation file has been copied to your clipboard, paste it in your favorite editor and save it as a *.json file for example \'en-US.json\'.\n\nWhen you are ready to import your changes run \'2. Translate page\' and pick your json file that contains the translations.', null);
-		return true;
-	},
+    copyStringToClipboard: function(string) {
+        var clipboard = NSPasteboard.generalPasteboard();
+        clipboard.declareTypes_owner([NSPasteboardTypeString], null);
+        clipboard.setString_forType(string , NSPasteboardTypeString);
+        this.alert('The translation file has been copied to your clipboard, paste it in your favorite editor and save it as a *.json file for example \'en-US.json\'.\n\nWhen you are ready to import your changes run \'2. Translate page\' and pick your json file that contains the translations.', null);
+        return true;
+    },
 
-	translatePageWithData: function(page, language, data) {
-		var pageName = [page name],
-				page = [page copy]
-				page.setName(pageName + ': ' + language),
-				textLayers = this.getTextLayersForPage(page),
-				errorCount = 0;
+    translatePageWithData: function(page, language, data) {
+        var pageName = [page name],
+                page = [page copy]
+                page.setName(pageName + ': ' + language),
+                textLayers = this.getTextLayersForPage(page),
+                errorCount = 0;
 
-		[[doc documentData] addPage:page];
+        [[doc documentData] addPage:page];
 
-		for (var i = 0; i < textLayers.length; i++) {
-			var textLayer = textLayers[i],
-					stringValue = unescape(textLayer.stringValue());
-			if(data[stringValue]){
-				textLayer.setStringValue(data[stringValue]);
-				[textLayer adjustFrameToFit];
-			}else{
-				errorCount++;
-			}
-		}
+        for (var i = 0; i < textLayers.length; i++) {
+            var textLayer = textLayers[i],
+                    stringValue = unescape(textLayer.stringValue());
+            if(data[stringValue]){
+                textLayer.setStringValue(data[stringValue]);
+                [textLayer adjustFrameToFit];
+            }else{
+                errorCount++;
+            }
+        }
 
-		[doc setCurrentPage:page];
+        [doc setCurrentPage:page];
 
-		// add suffix to artboard names
-		var artboards = page.artboards();
+        // add suffix to artboard names
+        var artboards = page.artboards();
 
-		var loop = [artboards objectEnumerator]
-		while (artboard = loop.nextObject()) {
-			artboard.setName(artboard.name() + "_" + language);
-		}
+        var loop = [artboards objectEnumerator]
+        while (artboard = loop.nextObject()) {
+            artboard.setName(artboard.name() + "_" + language);
+        }
 
-		return errorCount;
-	},
+        return errorCount;
+    },
 
-	translatePageWithFilePicker: function(page) {
-		var openPanel = [NSOpenPanel openPanel];
+    translatePageWithFilePicker: function(page) {
+        var openPanel = [NSOpenPanel openPanel];
 
-		var defaultDirectory = [NSURL fileURLWithPath:"~/Documents/"];
-		if([doc fileURL]) {
-			defaultDirectory = [[doc fileURL] URLByDeletingLastPathComponent]]
-		}
+        var defaultDirectory = [NSURL fileURLWithPath:"~/Documents/"];
+        if([doc fileURL]) {
+            defaultDirectory = [[doc fileURL] URLByDeletingLastPathComponent]]
+        }
 
-		[openPanel setCanChooseDirectories:true];
-		[openPanel setCanChooseFiles:true];
-		[openPanel setAllowedFileTypes:['json']];
-		[openPanel setCanCreateDirectories:false];
-		[openPanel setDirectoryURL:defaultDirectory];
+        [openPanel setCanChooseDirectories:true];
+        [openPanel setCanChooseFiles:true];
+        [openPanel setAllowedFileTypes:['json']];
+        [openPanel setCanCreateDirectories:false];
+        [openPanel setDirectoryURL:defaultDirectory];
         [openPanel setAllowsMultipleSelection: true]
 
-		[openPanel setTitle:"Pick a translation file"];
-		[openPanel setPrompt:"Translate"];
+        [openPanel setTitle:"Pick a translation file"];
+        [openPanel setPrompt:"Translate"];
 
-		if ([openPanel runModal] == NSOKButton) {
-			var urls = [openPanel URLs];
+        if ([openPanel runModal] == NSOKButton) {
+            var urls = [openPanel URLs];
             var errorCount = 0;
 
             var url, filename, getString;
@@ -136,11 +136,11 @@ com.translate = {
             }else{
                 this.alert('Translation completed successfully', null);
             }
-		}
+        }
 
-		return true;
-	},
+        return true;
+    },
 
-	debug: false
+    debug: false
 
 };
