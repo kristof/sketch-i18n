@@ -25,3 +25,6 @@ To propose changes, fork the repository and submit a pull request!
 
 ## Questions?
 [@houbenkristof](http://twitter.com/houbenkristof)
+
+## Contributors
+Florian Schulz [(getflourish)](https://github.com/getflourish)
